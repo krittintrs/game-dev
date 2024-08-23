@@ -2,7 +2,7 @@ import pygame, sys, random, math
 
 from constant import *
 from Ball import Ball
-from Paddle import Paddle
+from Paddle import Paddle, NotSoGoodAIPaddle, BetterAIPaddle, BetterAIPaddleV2, BetterAIPaddleV2Left
 
 class GameMain:
     def __init__(self):
@@ -29,8 +29,11 @@ class GameMain:
         self.serving_player = 1
         self.winning_player = 0
 
-        self.player1 = Paddle(self.screen, 30, 90, 15, 60)
-        self.player2 = Paddle(self.screen, WIDTH - 30, HEIGHT - 90, 15, 60)
+        # self.player1 = Paddle(self.screen, 30, 90, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.player1 = BetterAIPaddleV2Left(self.screen, 30, 90, PADDLE_WIDTH, PADDLE_HEIGHT)
+        # self.player2 = NotSoGoodAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PADDLE_HEIGHT)
+        # self.player2 = BetterAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.player2 = BetterAIPaddleV2(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PADDLE_HEIGHT)
 
         self.ball = Ball(self.screen, WIDTH/2 - 6, HEIGHT/2 - 6, 12, 12)
 
@@ -125,27 +128,19 @@ class GameMain:
                     self.game_state = 'serve'
                     self.ball.Reset()
 
-        key = pygame.key.get_pressed()
-        if key[pygame.K_w]:
-            self.player1.dy = -PADDLE_SPEED
-        elif key[pygame.K_s]:
-            self.player1.dy = PADDLE_SPEED
-        else:
-            self.player1.dy = 0
-
-        if key[pygame.K_UP]:
-            self.player2.dy = -PADDLE_SPEED
-        elif key[pygame.K_DOWN]:
-            self.player2.dy = PADDLE_SPEED
-        else:
-            self.player2.dy = 0
-
+        # key = pygame.key.get_pressed()
+        # if key[pygame.K_w]:
+        #     self.player1.dy = -PADDLE_SPEED
+        # elif key[pygame.K_s]:
+        #     self.player1.dy = PADDLE_SPEED
+        # else:
+        #     self.player1.dy = 0
 
         if self.game_state == 'play':
             self.ball.update(dt)
 
-        self.player1.update(dt)
-        self.player2.update(dt)
+        self.player1.update(dt, self.ball)
+        self.player2.update(dt, self.ball)
 
     def render(self):
         self.screen.fill((40, 45, 52))
