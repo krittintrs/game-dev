@@ -1,14 +1,23 @@
 import pygame
-import random
 import math
 from constant import *
 from Ball import Ball
 
+from enum import Enum
+
+class PaddleSize(Enum):
+    TINY = 20
+    SMALL = 40
+    MEDIUM = 60
+    LARGE = 80
+    HUGE = 100
+
 class Paddle:
-    def __init__(self, screen, x, y, width, height):
+    def __init__(self, screen, x, y, width, size: PaddleSize, color):
         self.screen = screen
 
-        self.rect = pygame.Rect(x, y, width, height)
+        self.rect = pygame.Rect(x, y, width, size.value)
+        self.color = color
         self.dy = 0
 
     def update(self, dt):
@@ -20,22 +29,23 @@ class Paddle:
                 self.rect.y += self.dy*dt
 
     def render(self):
-        pygame.draw.rect(self.screen, (255, 255, 255), self.rect)
+        # Neon glow effect
+        glow_color = self.color
+        glow_width = 5
+        inner_color = (0, 0, 0)
 
-class NotSoGoodAIPaddle(Paddle):
-    def __init__(self, screen, x, y, width, height):
-        super().__init__(screen, x, y, width, height)
+        # Draw the outer glowing border (neon effect)
+        pygame.draw.rect(self.screen, glow_color, self.rect.inflate(glow_width, glow_width), border_radius=5)
 
-    def update(self, dt, ball: Ball):
-        if ball.dy > 0:
-            self.dy = 150
-        else:
-            self.dy = -150
-        super().update(dt)
+        # Draw the inner solid color paddle
+        pygame.draw.rect(self.screen, inner_color, self.rect, border_radius=5)
 
-class BetterAIPaddle(Paddle):
-    def __init__(self, screen, x, y, width, height):
-        super().__init__(screen, x, y, width, height)
+    def Reset(self):
+        self.rect.height = PaddleSize.MEDIUM
+
+class WeakAIPaddle(Paddle):
+    def __init__(self, screen, x, y, width, height, color):
+        super().__init__(screen, x, y, width, height, color)
 
     def update(self, dt, ball: Ball):
         paddle_y = self.rect.centery
@@ -56,14 +66,16 @@ class BetterAIPaddle(Paddle):
             self.dy *= 4
         elif diff > 50:
             self.dy *= 2
+        elif diff < 10:
+            self.dy *= 0
 
         # print(ball.dy, ball_y, '/', paddle_y, diff)
 
         super().update(dt)
 
-class BetterAIPaddleV2(Paddle):
-    def __init__(self, screen, x, y, width, height):
-        super().__init__(screen, x, y, width, height)
+class StrongAIPaddle(Paddle):
+    def __init__(self, screen, x, y, width, height, color):
+        super().__init__(screen, x, y, width, height, color)
 
     def update(self, dt, ball: Ball):
         paddle_y = self.rect.centery
@@ -88,15 +100,17 @@ class BetterAIPaddleV2(Paddle):
             self.dy *= 4
         elif diff > 50:
             self.dy *= 2
+        elif diff < 10:
+            self.dy *= 0
 
         # print(ball.dy, ball_y, '/', paddle_y, diff)
         # print(ball.dy, dt, t, expected_y)
 
         super().update(dt)
 
-class BetterAIPaddleV2Left(Paddle):
-    def __init__(self, screen, x, y, width, height):
-        super().__init__(screen, x, y, width, height)
+class StrongAIPaddleLeft(Paddle):
+    def __init__(self, screen, x, y, width, height, color):
+        super().__init__(screen, x, y, width, height, color)
 
     def update(self, dt, ball: Ball):
         paddle_y = self.rect.centery
@@ -121,6 +135,8 @@ class BetterAIPaddleV2Left(Paddle):
             self.dy *= 4
         elif diff > 50:
             self.dy *= 2
+        elif diff < 10:
+            self.dy *= 0
 
         # print(ball.dy, ball_y, '/', paddle_y, diff)
         # print(ball.dy, dt, t, expected_y)
