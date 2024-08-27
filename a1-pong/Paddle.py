@@ -41,7 +41,7 @@ class Paddle:
         pygame.draw.rect(self.screen, inner_color, self.rect, border_radius=5)
 
     def Reset(self):
-        self.rect.height = PaddleSize.MEDIUM
+        self.rect.height = PaddleSize.MEDIUM.value
 
 class WeakAIPaddle(Paddle):
     def __init__(self, screen, x, y, width, height, color):

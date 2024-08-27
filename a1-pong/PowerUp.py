@@ -12,9 +12,9 @@ class PowerUpType(Enum):
 
 POWERUP_COLORS = {
     PowerUpType.INCREASE_PADDLE: (0, 255, 0),  # Green
-    PowerUpType.DECREASE_PADDLE: (255, 0, 0),  # Red
-    PowerUpType.INCREASE_BALL_SPEED: (0, 0, 255),   # Blue
-    PowerUpType.DECREASE_BALL_SPEED: (255, 255, 0), # Yellow
+    PowerUpType.DECREASE_PADDLE: (0, 0, 255),  # Blue
+    PowerUpType.INCREASE_BALL_SPEED: (255, 255, 0), # Yellow
+    PowerUpType.DECREASE_BALL_SPEED: (255, 0, 0),  # Red
     # Add more effect types and their corresponding colors here
 }
 
