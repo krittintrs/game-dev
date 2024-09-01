@@ -69,6 +69,9 @@ class GameMain:
 
         self.powerups = []
         self.game_state = GameState.START
+
+        self.original_ball_speed = (self.ball.dx, self.ball.dy)
+        self.ball_speed_boost_active = False
     
         # Timer for generating power-ups/power-downs
         self.powerup_timer = 0
@@ -137,6 +140,11 @@ class GameMain:
             if event.type == BALL_BLINK_EVENT:
                 self.ball.color = (255, 255, 255)  # Revert the ball color to white
                 pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
+                if self.ball_speed_boost_active:
+                    self.ball.dx = self.ball.dx / SPEED_BOOST_VALUE
+                    self.ball.dy = self.ball.dy / SPEED_BOOST_VALUE
+                    self.ball_speed_boost_active = False
+                # print(f'SPEED: ({self.ball.dx}, {self.ball.dy})')
 
         key = pygame.key.get_pressed()
         if key[pygame.K_w]:
@@ -332,9 +340,7 @@ class GameMain:
         if attempt == max_attempts:
             print("Warning: Could not find a non-colliding position for the power-up.")
 
-
     def apply_powerup(self, powerup: PowerUp, player):
-
         # Paddle Size
         current_size = PaddleSize(player.rect.height)
         if powerup.effect == PowerUpType.INCREASE_PADDLE:
@@ -361,12 +367,17 @@ class GameMain:
 
         # Ball Speed
         elif powerup.effect == PowerUpType.SPEED_BOOST:
+            # print('\nBOOSTING!')
+            # print(f'OLD SPEED: ({self.ball.dx}, {self.ball.dy})')
             self.music_channel.play(self.sounds_list['speed_boost'])
-            self.ball.dx *= 1.3
-            self.ball.dy *= 1.3
+            self.ball_speed_boost_active = True
+            self.ball.dx *= SPEED_BOOST_VALUE
+            self.ball.dy *= SPEED_BOOST_VALUE
             self.ball.color = (255, 0, 0)  # red
             self.blink_count = 0
             pygame.time.set_timer(BALL_BLINK_EVENT, SPEED_BOOST_TIMER) 
+            # print(f'NEW SPEED: ({self.ball.dx}, {self.ball.dy})\n')
+            
 
         # Split Ball
         elif powerup.effect == PowerUpType.SPLIT_BALL:
