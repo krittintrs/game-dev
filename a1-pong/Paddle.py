@@ -17,6 +17,7 @@ class Paddle:
         self.screen = screen
 
         self.rect = pygame.Rect(x, y, width, size.value)
+        self.initial_glow_color = glow_color
         self.glow_color = glow_color
         self.inner_color = (0, 0, 0)
         self.dy = 0
@@ -41,14 +42,29 @@ class Paddle:
 
     def Reset(self):
         self.rect.height = PaddleSize.MEDIUM.value
+        self.glow_color = self.initial_glow_color
+        self.inner_color = (0, 0, 0)
 
 class WeakAIPaddle(Paddle):
     def __init__(self, screen, x, y, width, height, color):
         super().__init__(screen, x, y, width, height, color)
 
-    def update(self, dt, ball: Ball):
+    def update(self, dt, balls: list[Ball]):
+        min_diff = 9999
+        if len(balls) > 1:
+            for ball in balls:
+                # if ball.dx >= 0:
+                diff_x = WIDTH - ball.rect.centerx
+                if diff_x < min_diff:
+                    nearest_ball = ball
+                    min_diff = diff_x
+
+            # print('WEAK Selected Ball: ', nearest_ball.name)
+        else: 
+            nearest_ball = balls[0]
+        
         paddle_y = self.rect.centery
-        ball_y = ball.rect.centery
+        ball_y = nearest_ball.rect.centery
 
         if ball_y > paddle_y:
             self.dy = 200
@@ -76,13 +92,26 @@ class StrongAIPaddle(Paddle):
     def __init__(self, screen, x, y, width, height, color):
         super().__init__(screen, x, y, width, height, color)
 
-    def update(self, dt, ball: Ball):
-        paddle_y = self.rect.centery
-        ball_x = ball.rect.centerx
-        ball_y = ball.rect.centery
+    def update(self, dt, balls: list[Ball]):
+        min_diff = 9999
+        if len(balls) > 1:
+            for ball in balls:
+                # if ball.dx >= 0:
+                diff_x = WIDTH - ball.rect.centerx
+                if diff_x < min_diff:
+                    nearest_ball = ball
+                    min_diff = diff_x
 
-        t = math.fabs((WIDTH - ball_x) / (ball.dx + 0.001))
-        expected_y = ball_y + ball.dy * t
+            # print('STRONG Selected Ball: ', nearest_ball.name)
+        else: 
+            nearest_ball = balls[0]
+        
+        paddle_y = self.rect.centery
+        ball_x = nearest_ball.rect.centerx
+        ball_y = nearest_ball.rect.centery
+
+        t = math.fabs((WIDTH - ball_x) / (nearest_ball.dx + 0.001))
+        expected_y = ball_y + nearest_ball.dy * t
 
         if expected_y > paddle_y:
             self.dy = 200
@@ -102,8 +131,8 @@ class StrongAIPaddle(Paddle):
         elif diff < 10:
             self.dy *= 0
 
-        # print(ball.dy, ball_y, '/', paddle_y, diff)
-        # print(ball.dy, dt, t, expected_y)
+        # print(nearest_ball.dy, ball_y, '/', paddle_y, diff)
+        # print(nearest_ball.dy, dt, t, expected_y)
 
         super().update(dt)
 
@@ -111,13 +140,26 @@ class StrongAIPaddleLeft(Paddle):
     def __init__(self, screen, x, y, width, height, color):
         super().__init__(screen, x, y, width, height, color)
 
-    def update(self, dt, ball: Ball):
-        paddle_y = self.rect.centery
-        ball_x = ball.rect.centerx
-        ball_y = ball.rect.centery
+    def update(self, dt, balls: list[Ball]):
+        min_diff = 9999
+        if len(balls) > 1:
+            for ball in balls:
+                # if ball.dx < 0:
+                diff_x = ball.rect.centerx
+                if diff_x < min_diff:
+                    nearest_ball = ball
+                    min_diff = diff_x
 
-        t = math.fabs((ball_x) / (ball.dx + 0.001))
-        expected_y = ball_y + ball.dy * t
+            # print('LEFT PADDLE Selected Ball: ', nearest_ball.name)
+        else: 
+            nearest_ball = balls[0]
+
+        paddle_y = self.rect.centery
+        ball_x = nearest_ball.rect.centerx
+        ball_y = nearest_ball.rect.centery
+
+        t = math.fabs((ball_x) / (nearest_ball.dx + 0.001))
+        expected_y = ball_y + nearest_ball.dy * t
 
         if expected_y > paddle_y:
             self.dy = 200
@@ -137,7 +179,7 @@ class StrongAIPaddleLeft(Paddle):
         elif diff < 10:
             self.dy *= 0
 
-        # print(ball.dy, ball_y, '/', paddle_y, diff)
-        # print(ball.dy, dt, t, expected_y)
+        # print(nearest_ball.dy, ball_y, '/', paddle_y, diff)
+        # print(nearest_ball.dy, dt, t, expected_y)
 
         super().update(dt)

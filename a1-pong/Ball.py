@@ -2,8 +2,9 @@ import pygame, random
 from constant import *
 
 class Ball:
-    def __init__(self, screen, x, y, width, height):
-        self.screen=screen
+    def __init__(self, name, screen, x, y, width, height):
+        self.name = name
+        self.screen = screen
 
         self.rect = pygame.Rect(x, y, width, height)
 
@@ -28,6 +29,7 @@ class Ball:
         self.rect.y = HEIGHT / 2 - 6
         self.dx = 0
         self.dy = 0
+        self.color = (255, 255, 255)
 
     def update(self, dt):
         self.rect.x += self.dx*dt
