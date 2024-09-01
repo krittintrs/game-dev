@@ -8,9 +8,6 @@ from PowerUp import PowerUp, PowerUpType
 
 PLAYER_1_BLINK_EVENT = pygame.USEREVENT + 1
 PLAYER_2_BLINK_EVENT = pygame.USEREVENT + 2
-# BALL_1_BLINK_EVENT = pygame.USEREVENT + 3
-# BALL_2_BLINK_EVENT = pygame.USEREVENT + 4
-BALLS_BLINK_EVENT = {'1': pygame.USEREVENT + 3}
 
 class GameState(Enum):
     START = 'start'
@@ -140,33 +137,6 @@ class GameMain:
                     self.player2.inner_color = (0, 0, 0)
                     pygame.time.set_timer(PLAYER_2_BLINK_EVENT, 0)  # Stop the timer
 
-            for i, ball_event in enumerate(BALLS_BLINK_EVENT):
-                if event.type == ball_event:
-                    self.balls[i].color = (255, 255, 255)  # Revert the ball color to white
-                    pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
-                    if self.ball_speed_boost_active:
-                        self.balls[i].dx = self.balls[i].dx / SPEED_BOOST_VALUE
-                        self.balls[i].dy = self.balls[i].dy / SPEED_BOOST_VALUE
-                        self.ball_speed_boost_active = False
-                        
-            # if event.type == BALL_1_BLINK_EVENT:
-            #     self.balls[0].color = (255, 255, 255)  # Revert the ball color to white
-            #     pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
-            #     if self.ball_speed_boost_active:
-            #         self.balls[0].dx = self.balls[0].dx / SPEED_BOOST_VALUE
-            #         self.balls[0].dy = self.balls[0].dy / SPEED_BOOST_VALUE
-            #         self.ball_speed_boost_active = False
-            #     # print(f'SPEED: ({self.balls[0].dx}, {self.balls[0].dy})')
-
-            # if event.type == BALL_2_BLINK_EVENT:
-            #     self.balls[1].color = (255, 255, 255)  # Revert the ball color to white
-            #     pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
-            #     if self.ball_speed_boost_active:
-            #         self.balls[1].dx = self.balls[1].dx / SPEED_BOOST_VALUE
-            #         self.balls[1].dy = self.balls[1].dy / SPEED_BOOST_VALUE
-            #         self.ball_speed_boost_active = False
-            #     # print(f'SPEED: ({self.balls[1].dx}, {self.balls[1].dy})')
-
         key = pygame.key.get_pressed()
         if key[pygame.K_w]:
             self.player1.dy = -PADDLE_SPEED
@@ -242,14 +212,20 @@ class GameMain:
         self.DisplayScore()
 
     def reset_field(self):
+        self.reset_balls_list()
+        self.reset_players()
+        self.powerups = []
+
+    def reset_balls_list(self):
         ball = Ball('ball_1', self.screen, WIDTH/2 - 6, HEIGHT/2 - 6, BALL_SIZE, BALL_SIZE)
         self.balls = [ball]
         self.balls[0].Reset()
+    
+    def reset_players(self):
         self.player1.Reset() 
         self.player2.Reset() 
         self.player1_score = 0
         self.player2_score = 0
-        self.powerups = []
 
     def check_collisions(self):
         for ball in self.balls:
@@ -304,12 +280,10 @@ class GameMain:
                     self.player2 = self.get_current_ai()
                 elif len(self.balls) > 1:
                     self.balls.remove(ball)
-                    ball_num = ball.name.split('_')[-1]
-                    BALLS_BLINK_EVENT.pop(ball_num, None)
                     continue
                 else:
                     self.game_state = GameState.SERVE
-                    ball.Reset()
+                    self.reset_balls_list()
                     self.powerups = []
             
             # ball hit player 2 goal
@@ -329,12 +303,10 @@ class GameMain:
                     self.player2 = self.get_current_ai()
                 elif len(self.balls) > 1:
                     self.balls.remove(ball)
-                    ball_num = ball.name.split('_')[-1]
-                    BALLS_BLINK_EVENT.pop(ball_num, None)
                     continue
                 else:
                     self.game_state = GameState.SERVE
-                    ball.Reset()
+                    self.reset_balls_list()
                     self.powerups = []    
 
             # ball hit powerups
@@ -412,35 +384,28 @@ class GameMain:
             ball.dx *= SPEED_BOOST_VALUE
             ball.dy *= SPEED_BOOST_VALUE
             ball.color = (255, 0, 0)  # red
+            
             self.blink_count = 0
-            
-            # if ball.name == 'ball_1':
-            #     pygame.time.set_timer(BALL_1_BLINK_EVENT, SPEED_BOOST_TIMER) 
-            # elif ball.name == 'ball_2':
-            #     pygame.time.set_timer(BALL_2_BLINK_EVENT, SPEED_BOOST_TIMER) 
-            # print(f'NEW SPEED: ({ball.dx}, {ball.dy})\n')
-            
-            ball_num = ball.name.split('_')[-1]
-            
-            if ball_num in BALLS_BLINK_EVENT:
-                pygame.time.set_timer(BALLS_BLINK_EVENT[ball_num], SPEED_BOOST_TIMER) 
-            else:
-                BALLS_BLINK_EVENT[ball_num] = pygame.USEREVENT + 3 + int(ball_num)
+            ball.toggle_blink(True)
 
         # Split Ball
         elif powerup.effect == PowerUpType.SPLIT_BALL:
             self.music_channel.play(self.sounds_list['split_ball'])
             # Spawn a new ball moving in the opposite direction
-            original_ball = self.balls[0]  # The original ball
+            original_ball = ball  # The original ball
             new_ball_dx = -original_ball.dx  # Opposite direction
             new_ball_dy = -original_ball.dy  # Opposite direction
             
             # Create and add the new ball
-            new_ball = Ball('ball_2', self.screen, original_ball.rect.x, original_ball.rect.y, BALL_SIZE, BALL_SIZE)
+            ball_num = len(self.balls) + 1
+            new_ball = Ball('ball_' + str(ball_num), self.screen, original_ball.rect.x, original_ball.rect.y, BALL_SIZE, BALL_SIZE)
             new_ball.dx = new_ball_dx
             new_ball.dy = new_ball_dy
             new_ball.color = (255, 255, 0)
+
             self.balls.append(new_ball)
+        
+        return None, None, None
 
     def DisplayScore(self):
         self.t_p1_score = self.score_font.render(str(self.player1_score), False, (255, 255, 255))
