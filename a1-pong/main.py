@@ -55,10 +55,10 @@ class GameMain:
 
         self.player1_color = (0, 255, 255)   # neon blue
         self.player2_color = (255, 20, 147)  # neon pink
-        # self.player1 = Paddle(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, player1_color)
-        self.player1 = StrongAIPaddleLeft(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player1_color)
+        self.player1 = Paddle(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player1_color)
+        # self.player1 = StrongAIPaddleLeft(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player1_color)
 
-        self.weak_ai = StrongAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player2_color)
+        self.weak_ai = WeakAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player2_color)
         self.strong_ai = StrongAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player2_color)
         
         self.current_ai_type = AIType.WEAK
@@ -69,9 +69,6 @@ class GameMain:
 
         self.powerups = []
         self.game_state = GameState.START
-
-        self.original_ball_speed = (self.balls[0].dx, self.balls[0].dy)
-        self.ball_speed_boost_active = False
     
         # Timer for generating power-ups/power-downs
         self.powerup_timer = 0
@@ -96,6 +93,7 @@ class GameMain:
                     elif self.game_state == GameState.DONE:
                         self.game_state = GameState.SERVE
                         self.reset_field()
+                        self.reset_players_score()
                         if self.winning_player == Player.PLAYER_1:
                             self.serving_player = Player.PLAYER_2
                         else:
@@ -158,8 +156,8 @@ class GameMain:
             for ball in self.balls:
                 ball.update(dt)
 
-        # self.player1.update(dt)
-        self.player1.update(dt, self.balls)
+        self.player1.update(dt)
+        # self.player1.update(dt, self.balls)
         self.player2.update(dt, self.balls)
 
     def render(self):
@@ -175,11 +173,11 @@ class GameMain:
             self.screen.blit(t_press_enter_begin, text_rect)
 
         elif self.game_state == GameState.SERVE:
-            t_ai_mode = self.small_font.render(str(self.current_ai_type.value).upper() + " AI Mode", False, (255, 255, 255))
+            t_ai_mode = self.small_font.render(f'{str(self.current_ai_type.value).upper()} AI Mode ({WINNING_SCORE} to Win)', False, (255, 255, 255))
             text_rect = t_ai_mode.get_rect(center=(WIDTH / 2, 30))
             self.screen.blit(t_ai_mode, text_rect)
 
-            t_serve = self.small_font.render("Player" + str(self.serving_player.value) + "'s serve!", False, (255, 255, 255))
+            t_serve = self.small_font.render(f'Player{str(self.serving_player.value)}\'s serve!', False, (255, 255, 255))
             text_rect = t_serve.get_rect(center=(WIDTH / 2, 60))
             self.screen.blit(t_serve, text_rect)
 
@@ -188,7 +186,7 @@ class GameMain:
             self.screen.blit(t_enter_serve, text_rect)
 
         elif self.game_state == GameState.DONE:
-            t_win = self.large_font.render("Player" + str(self.winning_player.value) + " wins!", False, (255, 255, 255))
+            t_win = self.large_font.render(f'Player{str(self.serving_player.value)} wins!', False, (255, 255, 255))
             text_rect = t_win.get_rect(center=(WIDTH / 2, 30))
             self.screen.blit(t_win, text_rect)
 
@@ -224,6 +222,8 @@ class GameMain:
     def reset_players(self):
         self.player1.Reset() 
         self.player2.Reset() 
+        
+    def reset_players_score(self):
         self.player1_score = 0
         self.player2_score = 0
 
@@ -282,9 +282,8 @@ class GameMain:
                     self.balls.remove(ball)
                     continue
                 else:
+                    self.reset_field()
                     self.game_state = GameState.SERVE
-                    self.reset_balls_list()
-                    self.powerups = []
             
             # ball hit player 2 goal
             if ball.rect.x > WIDTH:
@@ -305,9 +304,8 @@ class GameMain:
                     self.balls.remove(ball)
                     continue
                 else:
-                    self.game_state = GameState.SERVE
-                    self.reset_balls_list()
-                    self.powerups = []    
+                    self.reset_field()  
+                    self.game_state = GameState.SERVE  
 
             # ball hit powerups
             for powerup in self.powerups:
@@ -321,7 +319,7 @@ class GameMain:
 
     def update_powerups(self, dt):
         self.powerup_timer += dt
-        if self.powerup_timer > random.uniform(2, 10):  
+        if self.powerup_timer > random.uniform(5, 15):  
             self.spawn_powerup()
             self.powerup_timer = 0
 
@@ -380,11 +378,10 @@ class GameMain:
             # print('\nBOOSTING!')
             # print(f'OLD SPEED: ({ball.dx}, {ball.dy})')
             self.music_channel.play(self.sounds_list['speed_boost'])
-            self.ball_speed_boost_active = True
             ball.dx *= SPEED_BOOST_VALUE
             ball.dy *= SPEED_BOOST_VALUE
             ball.color = (255, 0, 0)  # red
-            
+
             self.blink_count = 0
             ball.toggle_blink(True)
 
@@ -401,7 +398,7 @@ class GameMain:
             new_ball = Ball('ball_' + str(ball_num), self.screen, original_ball.rect.x, original_ball.rect.y, BALL_SIZE, BALL_SIZE)
             new_ball.dx = new_ball_dx
             new_ball.dy = new_ball_dy
-            new_ball.color = (255, 255, 0)
+            new_ball.color = (255, 255, 255)
 
             self.balls.append(new_ball)
         
