@@ -32,7 +32,11 @@ class GameMain:
         self.sounds_list = {
             'paddle_hit': pygame.mixer.Sound('sounds/paddle_hit.wav'),
             'score': pygame.mixer.Sound('sounds/score.wav'),
-            'wall_hit': pygame.mixer.Sound('sounds/wall_hit.wav')
+            'wall_hit': pygame.mixer.Sound('sounds/wall_hit.wav'),
+            'increase_paddle': pygame.mixer.Sound('sounds/increase_paddle.wav'),
+            'decrease_paddle': pygame.mixer.Sound('sounds/decrease_paddle.wav'),
+            'speed_boost': pygame.mixer.Sound('sounds/speed_boost.wav'),
+            'split_ball': pygame.mixer.Sound('sounds/split_ball.wav'),
         }
 
         self.small_font = pygame.font.Font('./font.ttf', 24)
@@ -60,7 +64,7 @@ class GameMain:
 
         self.powerups = []
         self.game_state = GameState.START
-
+    
         # Timer for generating power-ups/power-downs
         self.powerup_timer = 0
 
@@ -83,14 +87,7 @@ class GameMain:
                         self.game_state = GameState.PLAY
                     elif self.game_state == GameState.DONE:
                         self.game_state = GameState.SERVE
-                        self.ball.Reset()
-
-                        self.player1_score = 0
-                        self.player2_score = 0
-
-                        self.player1.Reset() 
-                        self.player2.Reset() 
-
+                        self.reset_field()
                         if self.winning_player == Player.PLAYER_1:
                             self.serving_player = Player.PLAYER_2
                         else:
@@ -118,6 +115,14 @@ class GameMain:
 
         self.player1.update(dt)
         self.player2.update(dt, self.ball)
+
+    def reset_field(self):
+        self.ball.Reset()
+        self.player1.Reset() 
+        self.player2.Reset() 
+        self.player1_score = 0
+        self.player2_score = 0
+        self.powerups = []
 
     def render(self):
         self.screen.fill((40, 45, 52))
@@ -245,10 +250,8 @@ class GameMain:
             if powerup.active and self.ball.rect.colliderect(powerup.rect):
                 # self.apply_powerup(powerup)
                 if self.last_hit_player == Player.PLAYER_1:
-                    print(self.last_hit_player, powerup.effect)
                     self.apply_powerup(powerup, self.player1)
                 elif self.last_hit_player == Player.PLAYER_2:
-                    print(self.last_hit_player, powerup.effect)
                     self.apply_powerup(powerup, self.player2)
                 powerup.active = False
 
@@ -262,33 +265,53 @@ class GameMain:
         #     powerup.update(dt)
 
     def spawn_powerup(self):
-        x = random.randint(POWERUPS_SIZE, WIDTH - POWERUPS_SIZE)
-        y = random.randint(POWERUPS_SIZE, HEIGHT - POWERUPS_SIZE)
+        max_attempts = 100  # Set a limit to avoid infinite loops
+        attempt = 0
         
-        self.powerups.append(PowerUp(self.screen, x, y, POWERUPS_SIZE, POWERUPS_SIZE))
+        while attempt < max_attempts:
+            x = random.randint(POWERUPS_SIZE, WIDTH - POWERUPS_SIZE)
+            y = random.randint(POWERUPS_SIZE, HEIGHT - POWERUPS_SIZE)
+            
+            new_rect = pygame.Rect(x, y, POWERUPS_SIZE, POWERUPS_SIZE)
+            
+            # Check for collision with existing power-ups
+            collision = any(new_rect.colliderect(powerup.rect) for powerup in self.powerups)
+            
+            if not collision:
+                self.powerups.append(PowerUp(self.screen, x, y, POWERUPS_SIZE, POWERUPS_SIZE))
+                break  # Exit the loop once a valid position is found
+            
+            attempt += 1
+        
+        if attempt == max_attempts:
+            print("Warning: Could not find a non-colliding position for the power-up.")
+
 
     def apply_powerup(self, powerup: PowerUp, player):
 
         # Paddle Size
         current_size = PaddleSize(player.rect.height)
-        print(current_size, powerup.effect)
         if powerup.effect == PowerUpType.INCREASE_PADDLE:
+            self.music_channel.play(self.sounds_list['increase_paddle'])
             if current_size != PaddleSize.HUGE:
                 new_size = PaddleSize(min(current_size.value + 20, PaddleSize.HUGE.value))
                 player.rect.height = new_size.value
-                print(player.rect.height)
         elif powerup.effect == PowerUpType.DECREASE_PADDLE:
+            self.music_channel.play(self.sounds_list['decrease_paddle'])
             if current_size != PaddleSize.TINY:
                 new_size = PaddleSize(max(current_size.value - 20, PaddleSize.TINY.value))
                 player.rect.height = new_size.value
-                print(player.rect.height)
 
         # Ball Speed
-        elif powerup.effect == PowerUpType.INCREASE_BALL_SPEED:
-            self.ball.dx *= 1.5
-        elif powerup.effect == PowerUpType.DECREASE_BALL_SPEED:
-            if math.fabs(self.ball.dx) > 150:
-                self.ball.dx *= 0.6
+        elif powerup.effect == PowerUpType.SPEED_BOOST:
+            self.music_channel.play(self.sounds_list['speed_boost'])
+            self.ball.dx *= 1.3
+            self.ball.dy *= 1.3
+
+        # Split Ball
+        elif powerup.effect == PowerUpType.SPLIT_BALL:
+            self.music_channel.play(self.sounds_list['split_ball'])
+            pass
 
     def DisplayScore(self):
         self.t_p1_score = self.score_font.render(str(self.player1_score), False, (255, 255, 255))

@@ -32,4 +32,4 @@ class Ball:
         self.rect.y += self.dy*dt
 
     def render(self):
-        pygame.draw.rect(self.screen, (255, 255, 255), self.rect)
+        pygame.draw.rect(self.screen, (255, 255, 255), self.rect, border_radius=2)
