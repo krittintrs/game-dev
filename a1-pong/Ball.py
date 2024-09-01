@@ -13,12 +13,8 @@ class Ball:
 
         self.color = (255, 255, 255)
 
-        self.blinking = False  # Flag to indicate if the ball is blinking
-        self.blink_timer = 0   # Timer to handle blink duration
-
-    def toggle_blink(self, status):
-        self.blinking = status
-        self.blink_timer = pygame.time.get_ticks() if status else 0
+        self.is_boosted = False  # Flag to indicate if the ball is blinking
+        self.speed_boost_timer = 0   # Timer to handle blink duration
 
     def Collides(self, paddle):
         # first, check to see if the left edge of either is further to the right
@@ -37,23 +33,26 @@ class Ball:
         self.dx = 0
         self.dy = 0
         self.color = (255, 255, 255)
-        self.blinking = False  
-        self.blink_timer = 0
+        self.is_boosted = False  
+        self.speed_boost_timer = 0
+    
+    def toggle_speed_boost(self, status):
+        self.is_boosted = status
+        self.speed_boost_timer = pygame.time.get_ticks() if status else 0
 
     def update(self, dt):
         self.rect.x += self.dx*dt
         self.rect.y += self.dy*dt
 
-        if self.blinking:
+        if self.is_boosted:
             current_time = pygame.time.get_ticks()
-            if current_time - self.blink_timer > SPEED_BOOST_TIMER:  
-                self.blinking = False  # Stop blinking
+            if current_time - self.speed_boost_timer > SPEED_BOOST_TIMER:  
+                self.is_boosted = False  # Stop boosting
                 self.color = (255, 255, 255)  # Default color
                 self.dx = self.dx / SPEED_BOOST_VALUE
                 self.dy = self.dy / SPEED_BOOST_VALUE
                 self.ball_speed_boost_active = False
             else:
-                # Toggle color or implement blinking effect
                 self.color = (255, 255, 255) if (current_time // 250) % 2 == 0 else (255, 0, 0)
  
 

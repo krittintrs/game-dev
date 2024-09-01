@@ -6,11 +6,9 @@ from Ball import Ball
 from enum import Enum
 
 class PaddleSize(Enum):
-    TINY = 20
-    # SMALL = 40
+    SMALL = 20
     MEDIUM = 60
-    # LARGE = 80
-    HUGE = 100
+    LARGE = 100
 
 class Paddle:
     def __init__(self, screen, x, y, width, size: PaddleSize, glow_color):
@@ -53,13 +51,10 @@ class WeakAIPaddle(Paddle):
         min_diff = 9999
         if len(balls) > 1:
             for ball in balls:
-                # if ball.dx >= 0:
                 diff_x = WIDTH - ball.rect.centerx
                 if diff_x < min_diff:
                     nearest_ball = ball
                     min_diff = diff_x
-
-            # print('WEAK Selected Ball: ', nearest_ball.name)
         else: 
             nearest_ball = balls[0]
         
@@ -84,8 +79,6 @@ class WeakAIPaddle(Paddle):
         elif diff < 10:
             self.dy *= 0
 
-        # print(ball.dy, ball_y, '/', paddle_y, diff)
-
         super().update(dt)
 
 class StrongAIPaddle(Paddle):
@@ -96,13 +89,10 @@ class StrongAIPaddle(Paddle):
         min_diff = 9999
         if len(balls) > 1:
             for ball in balls:
-                # if ball.dx >= 0:
                 diff_x = WIDTH - ball.rect.centerx
                 if diff_x < min_diff:
                     nearest_ball = ball
                     min_diff = diff_x
-
-            # print('STRONG Selected Ball: ', nearest_ball.name)
         else: 
             nearest_ball = balls[0]
         
@@ -130,9 +120,6 @@ class StrongAIPaddle(Paddle):
             self.dy *= 2
         elif diff < 10:
             self.dy *= 0
-
-        # print(nearest_ball.dy, ball_y, '/', paddle_y, diff)
-        # print(nearest_ball.dy, dt, t, expected_y)
 
         super().update(dt)
 

@@ -361,8 +361,8 @@ class GameMain:
         current_size = PaddleSize(player.rect.height)
         if powerup.effect == PowerUpType.INCREASE_PADDLE:
             self.music_channel.play(self.sounds_list['increase_paddle'])
-            if current_size != PaddleSize.HUGE:
-                new_size = PaddleSize(min(current_size.value + 40, PaddleSize.HUGE.value))
+            if current_size != PaddleSize.LARGE:
+                new_size = PaddleSize(min(current_size.value + 40, PaddleSize.LARGE.value))
                 player.rect.height = new_size.value
             self.blink_count = 0
             if player == self.player1:
@@ -372,8 +372,8 @@ class GameMain:
 
         elif powerup.effect == PowerUpType.DECREASE_PADDLE:
             self.music_channel.play(self.sounds_list['decrease_paddle'])
-            if current_size != PaddleSize.TINY:
-                new_size = PaddleSize(max(current_size.value - 40, PaddleSize.TINY.value))
+            if current_size != PaddleSize.SMALL:
+                new_size = PaddleSize(max(current_size.value - 40, PaddleSize.SMALL.value))
                 player.rect.height = new_size.value
             self.blink_count = 0
             if player == self.player1:
@@ -383,15 +383,11 @@ class GameMain:
 
         # Ball Speed
         elif powerup.effect == PowerUpType.SPEED_BOOST:
-            # print('\nBOOSTING!')
-            # print(f'OLD SPEED: ({ball.dx}, {ball.dy})')
             self.music_channel.play(self.sounds_list['speed_boost'])
             ball.dx *= SPEED_BOOST_VALUE
             ball.dy *= SPEED_BOOST_VALUE
             ball.color = (255, 0, 0)  # red
-
-            self.blink_count = 0
-            ball.toggle_blink(True)
+            ball.toggle_speed_boost(True)
 
         # Split Ball
         elif powerup.effect == PowerUpType.SPLIT_BALL:
@@ -409,8 +405,6 @@ class GameMain:
             new_ball.color = (255, 255, 255)
 
             self.balls.append(new_ball)
-        
-        return None, None, None
 
     def DisplayScore(self):
         self.t_p1_score = self.score_font.render(str(self.player1_score), False, (255, 255, 255))
