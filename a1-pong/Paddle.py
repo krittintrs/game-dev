@@ -7,17 +7,18 @@ from enum import Enum
 
 class PaddleSize(Enum):
     TINY = 20
-    SMALL = 40
+    # SMALL = 40
     MEDIUM = 60
-    LARGE = 80
+    # LARGE = 80
     HUGE = 100
 
 class Paddle:
-    def __init__(self, screen, x, y, width, size: PaddleSize, color):
+    def __init__(self, screen, x, y, width, size: PaddleSize, glow_color):
         self.screen = screen
 
         self.rect = pygame.Rect(x, y, width, size.value)
-        self.color = color
+        self.glow_color = glow_color
+        self.inner_color = (0, 0, 0)
         self.dy = 0
 
     def update(self, dt):
@@ -30,15 +31,13 @@ class Paddle:
 
     def render(self):
         # Neon glow effect
-        glow_color = self.color
         glow_width = 5
-        inner_color = (0, 0, 0)
 
         # Draw the outer glowing border (neon effect)
-        pygame.draw.rect(self.screen, glow_color, self.rect.inflate(glow_width, glow_width), border_radius=5)
+        pygame.draw.rect(self.screen, self.glow_color, self.rect.inflate(glow_width, glow_width), border_radius=5)
 
         # Draw the inner solid color paddle
-        pygame.draw.rect(self.screen, inner_color, self.rect, border_radius=5)
+        pygame.draw.rect(self.screen, self.inner_color, self.rect, border_radius=5)
 
     def Reset(self):
         self.rect.height = PaddleSize.MEDIUM.value

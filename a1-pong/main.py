@@ -6,6 +6,10 @@ from Ball import Ball
 from Paddle import Paddle, WeakAIPaddle, StrongAIPaddle, StrongAIPaddleLeft, PaddleSize
 from PowerUp import PowerUp, PowerUpType
 
+PLAYER_1_BLINK_EVENT = pygame.USEREVENT + 1
+PLAYER_2_BLINK_EVENT = pygame.USEREVENT + 2
+BALL_BLINK_EVENT = pygame.USEREVENT + 3
+
 class GameState(Enum):
     START = 'start'
     SERVE = 'serve'
@@ -50,12 +54,13 @@ class GameMain:
         self.winning_player = 0
         self.last_hit_player = Player.PLAYER_1
 
-        player1_color = (0, 255, 255)   # neon blue
-        player2_color = (255, 20, 147)  # neon pink
-        self.player1 = Paddle(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, player1_color)
+        self.player1_color = (0, 255, 255)   # neon blue
+        self.player2_color = (255, 20, 147)  # neon pink
+        # self.player1 = Paddle(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, player1_color)
+        self.player1 = StrongAIPaddleLeft(self.screen, 30, 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player1_color)
 
-        self.weak_ai = WeakAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, player2_color)
-        self.strong_ai = StrongAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, player2_color)
+        self.weak_ai = WeakAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player2_color)
+        self.strong_ai = StrongAIPaddle(self.screen, WIDTH - 30, HEIGHT - 90, PADDLE_WIDTH, PaddleSize.MEDIUM, self.player2_color)
         
         self.current_ai_type = AIType.WEAK
         self.player2 = self.get_current_ai()
@@ -92,6 +97,46 @@ class GameMain:
                             self.serving_player = Player.PLAYER_2
                         else:
                             self.serving_player = Player.PLAYER_1
+            
+            if event.type == PLAYER_1_BLINK_EVENT:
+                if self.blink_count < 4:
+                    if self.blink_count % 2 == 0:
+                        glow_color = (255, 255, 255)
+                        inner_color = (255, 255, 255)
+                    else:
+                        glow_color = self.player1_color
+                        inner_color = (0, 0, 0)
+
+                    self.player1.glow_color = glow_color
+                    self.player1.inner_color = inner_color
+
+                    self.blink_count += 1
+                else:
+                    self.player1.glow_color = self.player1_color
+                    self.player1.inner_color = (0, 0, 0)
+                    pygame.time.set_timer(PLAYER_1_BLINK_EVENT, 0)  # Stop the timer
+
+            if event.type == PLAYER_2_BLINK_EVENT:
+                if self.blink_count < 4:
+                    if self.blink_count % 2 == 0:
+                        glow_color = (255, 255, 255)
+                        inner_color = (255, 255, 255)
+                    else:
+                        glow_color = self.player2_color
+                        inner_color = (0, 0, 0)
+
+                    self.player2.glow_color = glow_color
+                    self.player2.inner_color = inner_color
+
+                    self.blink_count += 1
+                else:
+                    self.player2.glow_color = self.player2_color
+                    self.player2.inner_color = (0, 0, 0)
+                    pygame.time.set_timer(PLAYER_2_BLINK_EVENT, 0)  # Stop the timer
+
+            if event.type == BALL_BLINK_EVENT:
+                self.ball.color = (255, 255, 255)  # Revert the ball color to white
+                pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
 
         key = pygame.key.get_pressed()
         if key[pygame.K_w]:
@@ -113,7 +158,8 @@ class GameMain:
             self.update_powerups(dt)
             self.ball.update(dt)
 
-        self.player1.update(dt)
+        # self.player1.update(dt)
+        self.player1.update(dt, self.ball)
         self.player2.update(dt, self.ball)
 
     def reset_field(self):
@@ -137,20 +183,20 @@ class GameMain:
             self.screen.blit(t_press_enter_begin, text_rect)
 
         elif self.game_state == GameState.SERVE:
-            t_serve = self.small_font.render("player" + str(self.serving_player.value) + "'s serve!", False, (255, 255, 255))
-            text_rect = t_serve.get_rect(center=(WIDTH / 2, 30))
-            self.screen.blit(t_serve, text_rect)
-            
-            t_ai_mode = self.small_font.render("Play Against " + str(self.current_ai_type.value) + "AI", False, (255, 255, 255))
-            text_rect = t_ai_mode.get_rect(center=(WIDTH / 2, 60))
+            t_ai_mode = self.small_font.render(str(self.current_ai_type.value).upper() + " AI Mode", False, (255, 255, 255))
+            text_rect = t_ai_mode.get_rect(center=(WIDTH / 2, 30))
             self.screen.blit(t_ai_mode, text_rect)
+
+            t_serve = self.small_font.render("Player " + str(self.serving_player.value) + "'s serve!", False, (255, 255, 255))
+            text_rect = t_serve.get_rect(center=(WIDTH / 2, 60))
+            self.screen.blit(t_serve, text_rect)
 
             t_enter_serve = self.small_font.render("Press Enter to serve!", False, (255, 255, 255))
             text_rect = t_enter_serve.get_rect(center=(WIDTH / 2, 90))
             self.screen.blit(t_enter_serve, text_rect)
 
         elif self.game_state == GameState.DONE:
-            t_win = self.large_font.render("player" + str(self.winning_player.value) + " wins!", False, (255, 255, 255))
+            t_win = self.large_font.render("Player " + str(self.winning_player.value) + " wins!", False, (255, 255, 255))
             text_rect = t_win.get_rect(center=(WIDTH / 2, 30))
             self.screen.blit(t_win, text_rect)
 
@@ -294,19 +340,33 @@ class GameMain:
         if powerup.effect == PowerUpType.INCREASE_PADDLE:
             self.music_channel.play(self.sounds_list['increase_paddle'])
             if current_size != PaddleSize.HUGE:
-                new_size = PaddleSize(min(current_size.value + 20, PaddleSize.HUGE.value))
+                new_size = PaddleSize(min(current_size.value + 40, PaddleSize.HUGE.value))
                 player.rect.height = new_size.value
+            self.blink_count = 0
+            if player == self.player1:
+                pygame.time.set_timer(PLAYER_1_BLINK_EVENT, POWERUPS_TIMER) 
+            elif player == self.player2:
+                pygame.time.set_timer(PLAYER_2_BLINK_EVENT, POWERUPS_TIMER) 
+
         elif powerup.effect == PowerUpType.DECREASE_PADDLE:
             self.music_channel.play(self.sounds_list['decrease_paddle'])
             if current_size != PaddleSize.TINY:
-                new_size = PaddleSize(max(current_size.value - 20, PaddleSize.TINY.value))
+                new_size = PaddleSize(max(current_size.value - 40, PaddleSize.TINY.value))
                 player.rect.height = new_size.value
+            self.blink_count = 0
+            if player == self.player1:
+                pygame.time.set_timer(PLAYER_1_BLINK_EVENT, POWERUPS_TIMER) 
+            elif player == self.player2:
+                pygame.time.set_timer(PLAYER_2_BLINK_EVENT, POWERUPS_TIMER)
 
         # Ball Speed
         elif powerup.effect == PowerUpType.SPEED_BOOST:
             self.music_channel.play(self.sounds_list['speed_boost'])
             self.ball.dx *= 1.3
             self.ball.dy *= 1.3
+            self.ball.color = (255, 0, 0)  # red
+            self.blink_count = 0
+            pygame.time.set_timer(BALL_BLINK_EVENT, SPEED_BOOST_TIMER) 
 
         # Split Ball
         elif powerup.effect == PowerUpType.SPLIT_BALL:

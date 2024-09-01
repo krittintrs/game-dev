@@ -7,8 +7,10 @@ class Ball:
 
         self.rect = pygame.Rect(x, y, width, height)
 
-        self.dx=random.choice([-300, 300])
-        self.dy=random.randint(-150, 150)
+        self.dx = random.choice([-300, 300])
+        self.dy = random.randint(-150, 150)
+
+        self.color = (255, 255, 255)
 
     def Collides(self, paddle):
         # first, check to see if the left edge of either is further to the right
@@ -32,4 +34,4 @@ class Ball:
         self.rect.y += self.dy*dt
 
     def render(self):
-        pygame.draw.rect(self.screen, (255, 255, 255), self.rect, border_radius=2)
+        pygame.draw.rect(self.screen, self.color, self.rect, border_radius=5)

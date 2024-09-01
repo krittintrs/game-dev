@@ -20,7 +20,7 @@ class PowerUp:
     def __init__(self, screen, x, y, width, height):
         self.screen = screen
         self.rect = pygame.Rect(x, y, width, height)
-        self.effect = random.choice(list(PowerUpType))
+        self.effect = random.choice(list([PowerUpType.SPEED_BOOST]))
         self.image = POWERUP_IMAGES[self.effect]
         self.image = pygame.transform.scale(self.image, (width, height))
         self.active = True
