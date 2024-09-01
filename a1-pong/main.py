@@ -177,7 +177,11 @@ class GameMain:
             text_rect = t_ai_mode.get_rect(center=(WIDTH / 2, 30))
             self.screen.blit(t_ai_mode, text_rect)
 
-            t_serve = self.small_font.render(f'Player{str(self.serving_player.value)}\'s serve!', False, (255, 255, 255))
+            if self.serving_player == Player.PLAYER_1:
+                serve = 'Player'
+            elif self.serving_player == Player.PLAYER_2:
+                serve = 'AI'
+            t_serve = self.small_font.render(f'{serve}\'s serve!', False, (255, 255, 255))
             text_rect = t_serve.get_rect(center=(WIDTH / 2, 60))
             self.screen.blit(t_serve, text_rect)
 
@@ -186,7 +190,11 @@ class GameMain:
             self.screen.blit(t_enter_serve, text_rect)
 
         elif self.game_state == GameState.DONE:
-            t_win = self.large_font.render(f'Player{str(self.serving_player.value)} wins!', False, (255, 255, 255))
+            if self.winning_player == Player.PLAYER_1:
+                winner = 'Player'
+            elif self.winning_player == Player.PLAYER_2:
+                winner = 'AI'
+            t_win = self.large_font.render(f'{winner} wins!', False, (255, 255, 255))
             text_rect = t_win.get_rect(center=(WIDTH / 2, 30))
             self.screen.blit(t_win, text_rect)
 
