@@ -11,8 +11,7 @@ font = pygame.font.SysFont('Helvetica', 24)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-TIMER_MAX = 10
-BIRDS_COUNT = 1000
+MOVE_DURATION = 3
 
 class Bird:
     def __init__(self, x, y, opacity):
@@ -30,18 +29,26 @@ class GameMain:
         self.max_frame_rate = 60
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.image = pygame.image.load('../image/flappy.png')
-        self.birds = []
-        self.end_x = WIDTH - self.image.get_width()
-        self.end_opacity = 255
+        
+        self.timer = 0
+        self.flappy_x, self.flappy_y = 0, 0
 
-        for i in range(BIRDS_COUNT):
-            random_y = random.random() * (HEIGHT - self.image.get_height())
-            bird = Bird(0, random_y, 0)
-            self.birds.append(bird)
+        self.bird = Bird(self.flappy_x, self.flappy_y, 255)
 
-            tween_time = random.random() * TIMER_MAX
-            tween.to(self.birds[i], 'x', self.end_x, tween_time)
-            tween.to(self.birds[i], 'opacity', self.end_opacity, tween_time)
+        def first_move():
+            tween.to(self.bird, 'x', WIDTH - self.image.get_width(), 
+                     MOVE_DURATION).on_complete(second_move)
+        def second_move():
+            tween.to(self.bird, 'y', HEIGHT - self.image.get_height(), 
+                     MOVE_DURATION).on_complete(third_move)
+        def third_move():
+            tween.to(self.bird, 'x', 0, 
+                     MOVE_DURATION).on_complete(fourth_move)
+        def fourth_move():
+            tween.to(self.bird, 'y', 0, 
+                     MOVE_DURATION).on_complete(first_move)
+            
+        first_move()
 
     def update(self, dt, events):
         for event in events:
@@ -53,8 +60,7 @@ class GameMain:
         
     def render(self):
         self.screen.fill(BLACK)
-        for i in range(BIRDS_COUNT):
-            self.birds[i].render(self.screen)
+        self.bird.render(self.screen)
 
     def PlayGame(self):
         clock = pygame.time.Clock()
